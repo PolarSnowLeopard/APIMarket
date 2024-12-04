@@ -52,7 +52,7 @@ python app.py
 2. 访问API文档
 
 ```
-http://localhost:5000/api
+http://localhost:5000/
 ```
 
 ## 项目结构
@@ -93,7 +93,12 @@ docker build -t apimarket .
 2. 运行容器
 
 ```bash
-docker run -p 5000:5000 -e OPENAI_API_KEY=your_openai_api_key apimarket
+sudo docker run -d \
+--name APIMarket \
+-p 5000:5000 \
+--restart unless-stopped \
+-v $(pwd)/.env:/app/.env \
+api-market
 ```
 
 ## 如何添加新的模拟API
