@@ -45,6 +45,10 @@ calculation_request = api.model('CalculationRequest', {
     'formula': fields.String(required=True, description='The formula to calculate')
 })
 
+report_request = api.model('ReportRequest', {
+    'message': fields.String(required=False, description='The report message, the prediction result of the model')
+})
+
 @ns.route('/get_user_id')
 class GetUserID(Resource):
     @ns.expect(user_nickname)
@@ -147,6 +151,30 @@ class Calculate(Resource):
         print(f"Formula: {formula}")
         print(f"Result: {1}")
         return jsonify({"result": 1})
+
+@ns.route('/pj1_report')
+class PJ1Report(Resource):
+    @ns.expect(report_request)
+    @ns.doc(description='生成课题一算法模型在给定数据集的推理结果的报告。')
+    def post(self):
+        data = request.json
+        message = data.get('message')
+        prompt = f"你是一个专业的报告生成器，下面是跨境贸易支付监测课题一算法模型（基于图神经网络）在数据集上的推理结果，请根据给定的输入生成专业的模型效果报告。你的报告应尽可能详细，不要包含任何称谓、落款、日期等任何信息，不要进行任何解释。你必须用中文进行交互：\n{message}\n"
+        client = OpenAI()
+        response = client.chat.completions.create(
+            model="gpt-4",  # 选择合适的引擎
+            messages=[
+                {"role": "system", "content": "你是一个专业的报告生成器。"
+                "请撰写报告，总结给定模型的推理结果。你的回答应尽可能详尽，且确保专业"
+                "不要包含称谓、落款、日期等任何信息，不要进行任何解释。你必须用中文进行交互"},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=5120,  # 设置生成文本的最大长度
+            n=1,
+            stop=None,
+            temperature=0.7  # 控制生成文本的随机性
+        )
+        return response.choices[0].message.content
 
 @ns.route('/exit_script')
 class ExitScript(Resource):
