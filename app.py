@@ -3,7 +3,7 @@ from flask_restx import Api, Resource, fields
 import json
 from openai import OpenAI
 from dotenv import load_dotenv
-from mock_data import MOCK_USER_INFO, MOCK_USER_ID
+from mock_data import MOCK_USER_INFO, MOCK_USER_ID, MOCK_PJ1_REPORT
 
 load_dotenv()
 
@@ -159,6 +159,8 @@ class PJ1Report(Resource):
     def post(self):
         data = request.json
         message = data.get('message')
+        if not message:
+            return jsonify({"result": MOCK_PJ1_REPORT})
         prompt = f"你是一个专业的报告生成器，下面是跨境贸易支付监测课题一算法模型（基于图神经网络）在数据集上的推理结果，请根据给定的输入生成专业的模型效果报告。你的报告应尽可能详细，不要包含任何称谓、落款、日期等任何信息，不要进行任何解释。你必须用中文进行交互：\n{message}\n"
         client = OpenAI()
         response = client.chat.completions.create(
@@ -174,7 +176,7 @@ class PJ1Report(Resource):
             stop=None,
             temperature=0.7  # 控制生成文本的随机性
         )
-        return response.choices[0].message.content
+        return jsonify({"result": response.choices[0].message.content})
 
 @ns.route('/exit_script')
 class ExitScript(Resource):
