@@ -159,7 +159,7 @@ class PJ1Report(Resource):
     def post(self):
         data = request.json
         message = data.get('message', None)
-        if not message:
+        if not message or message == "test":
             return jsonify({"result": MOCK_PJ1_REPORT})
         prompt = f"你是一个专业的报告生成器，下面是跨境贸易支付监测课题一算法模型（基于图神经网络）在数据集上的推理结果，请根据给定的输入生成专业的模型效果报告。你的报告应尽可能详细，不要包含任何称谓、落款、日期等任何信息，不要进行任何解释。你必须用中文进行交互：\n{message}\n"
         client = OpenAI()
