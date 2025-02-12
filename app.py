@@ -4,10 +4,13 @@ import json
 from openai import OpenAI
 from dotenv import load_dotenv
 from mock_data import MOCK_USER_INFO, MOCK_USER_ID, MOCK_PJ1_REPORT
+from flask_cors import CORS
+from werkzeug.datastructures import FileStorage
 
 load_dotenv()
 
 app = Flask(__name__)
+CORS(app)
 api = Api(app, version='1.0', title='My API',
           description='A simple demonstration of a Flask API with OpenAPI documentation')
 
@@ -48,6 +51,14 @@ calculation_request = api.model('CalculationRequest', {
 report_request = api.model('ReportRequest', {
     'message': fields.String(required=False, description='The report message, the prediction result of the model')
 })
+
+# 定义上传文件的参数模型
+upload_parser = api.parser()
+upload_parser.add_argument('file',
+                          type=FileStorage,
+                          location='files',
+                          required=True,
+                          help='ZIP格式的数据集文件')
 
 @ns.route('/get_user_id')
 class GetUserID(Resource):
@@ -159,7 +170,7 @@ class PJ1Report(Resource):
     def post(self):
         data = request.json
         message = data.get('message', None)
-        if True or not message or message == "test":
+        if not message or message == "test":
             return jsonify({"result": MOCK_PJ1_REPORT})
         prompt = f"你是一个专业的报告生成器，下面是跨境贸易支付监测课题一算法模型（基于图神经网络）在数据集上的推理结果，请根据给定的输入生成专业的模型效果报告。你的报告应尽可能详细，不要包含任何称谓、落款、日期等任何信息，不要进行任何解释。你必须用中文进行交互：\n{message}\n"
         client = OpenAI()
@@ -177,6 +188,25 @@ class PJ1Report(Resource):
             temperature=0.7  # 控制生成文本的随机性
         )
         return jsonify({"result": response.choices[0].message.content})
+    
+@ns.route('/pj1_report_app')
+class Prediction(Resource):
+    @ns.expect(upload_parser)
+    @ns.doc(responses={
+        200: 'Success',
+        400: 'Validation Error',
+        500: 'Internal Server Error'
+    })
+    def post(self):
+        """
+        上传数据集并进行推理
+        上传一个包含完整图数据集的ZIP文件，系统将进行模型推理并返回结果。
+        ZIP文件必须包含以下文件：
+        - meta.yaml: 数据集元信息
+        - edges_*.csv: 边数据文件
+        - nodes_*.csv: 节点数据文件
+        """
+        return jsonify({"result": MOCK_PJ1_REPORT})
 
 @ns.route('/exit_script')
 class ExitScript(Resource):

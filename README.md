@@ -101,6 +101,41 @@ sudo docker run -d \
 api-market
 ```
 
+## 服务器更新部署
+
+1. 更新代码
+```bash
+# 拉取最新代码
+git pull origin main
+
+# 停止并删除旧容器
+sudo docker stop APIMarket
+sudo docker rm APIMarket
+
+# 删除旧镜像
+sudo docker rmi api-market
+
+# 重新构建镜像
+sudo docker build -t api-market .
+
+# 启动新容器
+sudo docker run -d \
+--name APIMarket \
+-p 5000:5000 \
+--restart unless-stopped \
+-v $(pwd)/.env:/app/.env \
+api-market
+```
+
+2. 检查部署状态
+```bash
+# 查看容器运行状态
+sudo docker ps
+
+# 查看容器日志
+sudo docker logs APIMarket
+```
+
 ## 如何添加新的模拟API
 
 ### 1. 在mock_data.py中添加模拟数据
